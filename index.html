@@ -208,6 +208,25 @@ function Pomo({ps,setPs}){
   const [edit,setEdit]=useState(false);
   const [molaTip,setMolaTip]=useState("");
   const ref=useRef(null);
+  const audioRef=useRef(null);
+
+  useEffect(()=>{
+    if("Notification" in window && Notification.permission==="default") Notification.requestPermission();
+    // Create audio context for beep
+    audioRef.current={play:()=>{try{const ac=new(window.AudioContext||window.webkitAudioContext)();const osc=ac.createOscillator();const gain=ac.createGain();osc.connect(gain);gain.connect(ac.destination);osc.frequency.value=800;gain.gain.value=0.3;osc.start();setTimeout(()=>{osc.frequency.value=600},200);setTimeout(()=>{osc.frequency.value=800},400);setTimeout(()=>{osc.stop();ac.close()},600)}catch{}}};
+  },[]);
+
+  const notify=(title,body)=>{
+    // Sound
+    if(audioRef.current) audioRef.current.play();
+    // Browser notification
+    if("Notification" in window && Notification.permission==="granted"){
+      new Notification(title,{body,icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' x='10' font-size='80'>🍅</text></svg>"});
+    }
+    // Title flash
+    const orig=document.title;document.title="⏰ "+title;setTimeout(()=>document.title=orig,3000);
+  };
+
   const tot=mode==="work"?ps.work*60:mode==="brk"?ps.brk*60:ps.lng*60;
   const prog=(tot-tl)/tot;
   useEffect(()=>{setTl(ps.work*60);setMode("work");setRnd(1);setRun(false)},[ps]);
@@ -216,7 +235,7 @@ function Pomo({ps,setPs}){
     else clearInterval(ref.current);
     return()=>clearInterval(ref.current);
   },[run,mode]);
-  const ep=()=>{setRun(false);if(mode==="work"){if(rnd%4===0){setMode("lng");setTl(ps.lng*60);setMolaTip(MOLA_UZUN[Math.floor(Math.random()*MOLA_UZUN.length)])}else{setMode("brk");setTl(ps.brk*60);setMolaTip(MOLA_KISA[Math.floor(Math.random()*MOLA_KISA.length)])}}else{setMode("work");setTl(ps.work*60);setRnd(r=>r+1);setMolaTip("")}};
+  const ep=()=>{setRun(false);if(mode==="work"){if(rnd%4===0){setMode("lng");setTl(ps.lng*60);setMolaTip(MOLA_UZUN[Math.floor(Math.random()*MOLA_UZUN.length)]);notify("Uzun Mola","15 dakika mola. Masadan kalk.")}else{setMode("brk");setTl(ps.brk*60);setMolaTip(MOLA_KISA[Math.floor(Math.random()*MOLA_KISA.length)]);notify("Mola","5 dakika mola. Ekrandan uzaklaş.")}}else{setMode("work");setTl(ps.work*60);setRnd(r=>r+1);setMolaTip("");notify("Odak Zamanı","Başla.")}};
   const rs=()=>{setRun(false);setMode("work");setTl(ps.work*60);setRnd(1)};
   const fmt=s=>`${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
   const mc=mode==="work"?"#E74C3C":mode==="brk"?"#2ECC71":"#3498DB";
