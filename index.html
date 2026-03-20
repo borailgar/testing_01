@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stres Rehberi">
+<meta name="theme-color" content="#0a0e1a">
+<title>Stres Rehberi</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU3RyZXMgUmVoYmVyaSIsInNob3J0X25hbWUiOiJTdHJlcyIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGEwZTFhIiwidGhlbWVfY29sb3IiOiIjMGEwZTFhIn0=">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0e1a' width='100' height='100' rx='20'/><text y='68' x='50' text-anchor='middle' font-size='50'>🧘</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.9/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Outfit',sans-serif;background:#0a0e1a;color:#e0e4ef;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+input,textarea,button{font-family:'Outfit',sans-serif}
+::-webkit-scrollbar{display:none}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+
+/* DATA */
+const L1={id:1,name:"Yulaflı Kahvaltı",macros:{cal:2220,protein:160,fat:72,carb:233},meals:[
+{label:"Öğün 1",name:"Yulaf Yemeği",time:"07:00",icon:"🥣",items:["70g yulaf (7 yemek kaşığı)","1,5 su bardağı laktozsuz süt (300ml)","Whey protein (1 ölçek, 30g)","2 değişim meyve (muz gibi)","2 tatlı kaşığı yer fıstığı ezmesi (20g) / 10 badem"]},
+{label:"Ara Öğün",name:"Meyve",time:"09:30",icon:"🍎",items:["1 değişim meyve (çilek / elma)"]},
+{label:"Öğün 2",name:"Öğle Yemeği",time:"12:30",icon:"🍲",items:["200g çiğ tavuk / hindi / 200g ızgara balık","100g çiğ pirinç / 500g patates + 10g tereyağı","Fırında sebze + 10g zeytinyağı"]},
+{label:"Öğün 3",name:"Akşam Yemeği",time:"19:00",icon:"🥗",items:["200g çiğ tavuk / 200g yağsız kıyma (ızgara/fırın/haşlama)","50g çiğ pirinç / 250g patates + 5g tereyağı","1 kase yeşil salata + 10g zeytinyağı"]},
+{label:"Alternatif",name:"Kıymalı Makarna",time:"19:00",icon:"🍝",items:["150g çiğ yağsız kıyma","40g parmesan","50g çiğ makarna","10g zeytinyağı","Yeşil salata"]}
+]};
+const L2={id:2,name:"Yumurtalı Kahvaltı",macros:{cal:2243,protein:157,fat:83,carb:217},meals:[
+{label:"Öğün 1",name:"Yumurtalı Kahvaltı",time:"07:00",icon:"🍳",items:["3 tam yumurta + 5g tereyağı","50g beyaz peynir","2 dilim tam buğday ekmeği (50g)","5-6 adet zeytin","1 kase çiğ maydanoz","2 değişim meyve"]},
+{label:"Ara Öğün",name:"Spor Sonrası",time:"09:30",icon:"💪",items:["Whey protein (1 ölçek, 30g)","2 değişim meyve","8 yemek kaşığı light yoğurt (300g)"]},
+{label:"Öğün 2",name:"Öğle Yemeği",time:"12:30",icon:"🍲",items:["100g çiğ tavuk / hindi but / 100g bonfile","100g çiğ pirinç / 500g patates + 10g tereyağı","Fırında sebze + 10g zeytinyağı"]},
+{label:"Öğün 3",name:"Akşam Yemeği",time:"19:00",icon:"🥗",items:["300g çiğ tavuk / 300g yağsız kıyma","50g çiğ pirinç / 250g patates + 5g tereyağı","1 kase yeşil salata + 10g zeytinyağı"]},
+{label:"Alternatif",name:"Tavuklu Wrap",time:"19:00",icon:"🌯",items:["300g çiğ tavuk","2 tam buğday lavaş (130g)","Biber, soğan, sarımsak, mantar","20g zeytinyağı"]}
+]};
+const WK=[
+{day:1,name:"Üst Vücut",icon:"💪",ac:"#E74C3C",ex:[{n:"Dumbbell Bench Press",s:"3×8-10",r:"RIR 1",rest:"90sn"},{n:"Single Arm DB Row",s:"3×8-13",r:"RIR 1",rest:"90sn",note:"iki taraf"},{n:"Push Up",s:"3×Maks",r:"RIR 0",rest:"2dk"},{n:"Seated DB Shoulder Press",s:"2×8-10",r:"RIR 1",rest:"2dk"},{n:"DB Lateral Raise",s:"3×8-13",r:"RIR 0",rest:"90sn"}],xt:["Süper Set: Plank 3×30-60sn / 60sn dinlenme"]},
+{day:2,name:"Alt Vücut",icon:"🦵",ac:"#3498DB",ex:[{n:"Goblet Squat",s:"3×8-13",r:"RIR 1",rest:"90sn"},{n:"DB Romanian Deadlift",s:"3×8-13",r:"RIR 1",rest:"90sn"},{n:"DB Back Stepping Lunge",s:"2×6-8",r:"RIR 1",rest:"2dk",note:"iki taraf"},{n:"DB Lying Leg Curl",s:"3×10-15",r:"RIR 0",rest:"90sn"},{n:"Single Leg Calf Raise",s:"3×10-15",r:"",rest:"60sn",note:"iki taraf"}],xt:["Süper Set / Toplam: 3 set / 60sn dinlenme"]},
+{day:3,name:"Üst Vücut",icon:"🏋️",ac:"#9B59B6",ex:[{n:"Seated DB Shoulder Press",s:"2×8-10",r:"RIR 1",rest:"2dk"},{n:"DB Lateral Raise",s:"3×8-13",r:"RIR 0",rest:"90sn"},{n:"Chest Supported Row",s:"3×8-13",r:"RIR 1",rest:"90sn"},{n:"DB Chest Fly",s:"3×8-13",r:"RIR 1",rest:"90sn"},{n:"DB Shrug",s:"3×10-15",r:"RIR 0",rest:"60sn"},{n:"Banded Face Pull",s:"3×10-15",r:"",rest:"90sn"},{n:"DB Hammer Curl",s:"3×8-10",r:"RIR 0",rest:"90sn"},{n:"DB Kickback",s:"3×8-10",r:"RIR 0",rest:"90sn",note:"iki taraf"}],xt:[]},
+{day:4,name:"Fullbody Salon",icon:"🏢",ac:"#E67E22",ex:[{n:"Leg Extension",s:"3×8-13",r:"RIR 1",rest:"2dk"},{n:"Incline Chest Press Machine",s:"3×8-10",r:"RIR 1",rest:"2dk"},{n:"Wide Grip Seated Cable Row",s:"3×8-10",r:"RIR 1",rest:"90sn"},{n:"Seated Leg Curl",s:"3×8-13",r:"RIR 1",rest:"2dk"},{n:"Pecdeck Fly",s:"3×8-13",r:"RIR 1",rest:"2dk"},{n:"Single Arm Seated Cable Row",s:"3×8-10",r:"RIR 0",rest:"90sn",note:"iki taraf"},{n:"Machine Hip Abduction",s:"2×8-10",r:"RIR 0",rest:"90sn"}],xt:["Cardio: Haftada 3 gün, antrenman sonu 20-30dk"]}
+];
+const SCH=[{t:"06:30",l:"Uyanış",d:"Telefona bakma, güneş ışığı",i:"🌅",c:"#F59E0B"},{t:"07:00",l:"Öğün 1",d:"Kahvaltı",i:"🥣",c:"#10B981"},{t:"07:45",l:"Spor",d:"Antrenman günleri",i:"🏋️",c:"#E74C3C"},{t:"09:00",l:"İş Başla",d:"Pomodoro ile odaklan",i:"💼",c:"#3B82F6"},{t:"09:30",l:"Ara Öğün",d:"Spor sonrası / meyve",i:"🍎",c:"#10B981"},{t:"12:30",l:"Öğün 2",d:"Öğle yemeği",i:"🍲",c:"#10B981"},{t:"15:00",l:"Mola",d:"Yeşil çay + yürüyüş",i:"🍵",c:"#8B5CF6"},{t:"18:00",l:"İş Bitiş",d:"Geçiş ritüeli",i:"🏠",c:"#3B82F6"},{t:"18:15",l:"Hareket?",d:"Bisiklet / Yürüyüş / Pas",i:"🚴",c:"#E67E22",opt:1},{t:"19:00",l:"Öğün 3",d:"Akşam yemeği",i:"🥗",c:"#10B981"},{t:"20:00",l:"Dinlenme",d:"Meditasyon / sosyal",i:"🧘",c:"#8B5CF6"},{t:"22:00",l:"Ekran Kapat",d:"Loş ışık, kitap",i:"📖",c:"#6366F1"},{t:"23:00",l:"Uyku",d:"Karanlık, serin oda",i:"🌙",c:"#6366F1"}];
+const TIPS=[{id:"s1",t:"İlk 30dk telefona bakma",c:"#F59E0B"},{id:"s2",t:"5dk nefes egzersizi (4-7-8)",c:"#F59E0B"},{id:"s3",t:"Doom scrolling yapma",c:"#3B82F6"},{id:"s4",t:"Tek seferde tek iş yap",c:"#3B82F6"},{id:"s5",t:"Kahve yerine yeşil çay",c:"#3B82F6"},{id:"s6",t:"22:00 sonrası ekranları bırak",c:"#6366F1"},{id:"s7",t:"Ertesi günü akşamdan hazırla",c:"#6366F1"},{id:"s8",t:"Sabit uyku saati",c:"#6366F1"}];
+const SUPPS=[{n:"Omega-3",d:"1000 EPA+DHA",i:"🐟"},{n:"D3",d:"2000 IU (kış)",i:"☀️"},{n:"Kreatin",d:"5g/gün",i:"⚡"},{n:"Protein Tozu",d:"Gerektiğinde",i:"🥛"}];
+const TABS=[{id:"beslenme",icon:"🍽",l:"Beslenme"},{id:"antrenman",icon:"🏋️",l:"Antrenman"},{id:"pomodoro",icon:"🍅",l:"Pomodoro"},{id:"izleme",icon:"📺",l:"İzleme"},{id:"rehber",icon:"📋",l:"Rehber"}];
+
+/* STYLES */
+const mono={fontFamily:"'JetBrains Mono',monospace"};
+const card={background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:16,padding:14,marginBottom:8};
+const badge=(c)=>({display:"inline-block",fontSize:10,padding:"2px 8px",borderRadius:20,...mono,letterSpacing:.5,background:c+"18",color:c,fontWeight:500});
+
+/* APP */
+function App(){
+  const [tab,setTab]=useState("beslenme");
+  const [liste,setListe]=useState(1);
+  const [mc,setMc]=useState(()=>LS.get("mc")||{});
+  const [ec,setEc]=useState(()=>LS.get("ec")||{});
+  const [tc,setTc]=useState(()=>LS.get("tc")||{});
+  const [wd,setWd]=useState(0);
+  const [ps,setPs]=useState(()=>LS.get("ps")||{work:25,brk:5,lng:15});
+  const [ev,setEv]=useState(null);
+  const [wl,setWl]=useState(()=>LS.get("wl")||{watching:[],later:[]});
+
+  useEffect(()=>{LS.set("mc",mc)},[mc]);
+  useEffect(()=>{LS.set("ec",ec)},[ec]);
+  useEffect(()=>{LS.set("tc",tc)},[tc]);
+  useEffect(()=>{LS.set("ps",ps)},[ps]);
+  useEffect(()=>{LS.set("wl",wl)},[wl]);
+
+  const cl=liste===1?L1:L2;
+  const h=new Date().getHours();
+  const gr=h<12?"Günaydın":h<18?"İyi günler":"İyi akşamlar";
+  const titles={beslenme:cl.name,antrenman:"Antrenman Programı",pomodoro:"Odak Zamanı",izleme:"İzleme Listesi",rehber:"Günlük Akış"};
+
+  return <div style={{minHeight:"100vh",paddingBottom:80,position:"relative"}}>
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,background:"radial-gradient(ellipse at 15% 0%,rgba(231,76,60,0.05) 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(52,152,219,0.04) 0%,transparent 55%)"}}/>
+    <div style={{position:"relative",zIndex:1,maxWidth:480,margin:"0 auto"}}>
+      <div style={{padding:"max(env(safe-area-inset-top),20px) 20px 0",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div>
+          <div style={{...mono,fontSize:10,letterSpacing:3,color:"#E74C3C",fontWeight:600}}>{gr.toUpperCase()}</div>
+          <h1 style={{fontSize:22,fontWeight:300,margin:"4px 0 0",color:"#f0f2f8"}}>{titles[tab]}</h1>
+        </div>
+        {tab==="beslenme"&&<button onClick={()=>setListe(l=>l===1?2:1)} style={{background:"rgba(231,76,60,0.1)",border:"1px solid rgba(231,76,60,0.2)",color:"#E74C3C",borderRadius:10,padding:"7px 12px",cursor:"pointer",fontSize:11,...mono,fontWeight:500,marginTop:4}}>Liste {liste===1?2:1}'e geç</button>}
+      </div>
+      <div style={{padding:"14px 20px 0"}}>
+        {tab==="beslenme"&&<Meals liste={cl} mc={mc} setMc={setMc}/>}
+        {tab==="antrenman"&&<Workout wd={wd} setWd={setWd} ec={ec} setEc={setEc}/>}
+        {tab==="pomodoro"&&<Pomo ps={ps} setPs={setPs}/>}
+        {tab==="izleme"&&<Watch wl={wl} setWl={setWl}/>}
+        {tab==="rehber"&&<Guide tc={tc} setTc={setTc} ev={ev} setEv={setEv}/>}
+      </div>
+    </div>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:10,background:"linear-gradient(180deg,transparent,#0a0e1a 30%)",paddingTop:24}}>
+      <div style={{maxWidth:480,margin:"0 auto",display:"flex",background:"#0f1322",borderTop:"1px solid rgba(255,255,255,0.05)",padding:"8px 0 max(env(safe-area-inset-bottom),14px)"}}>
+        {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 0"}}>
+          <span style={{fontSize:19,filter:tab===t.id?"none":"grayscale(1) opacity(0.35)",transition:"all .2s"}}>{t.icon}</span>
+          <span style={{...mono,fontSize:9,letterSpacing:.5,color:tab===t.id?"#E74C3C":"#3a4060",fontWeight:tab===t.id?600:400}}>{t.l}</span>
+        </button>)}
+      </div>
+    </div>
+  </div>;
+}
+
+/* BESLENME */
+function Meals({liste,mc,setMc}){
+  const [exp,setExp]=useState(null);
+  const tog=k=>setMc(p=>({...p,[k]:!p[k]}));
+  const main=liste.meals.filter(m=>!m.label.startsWith("Alternatif"));
+  const done=main.filter((_,i)=>mc[`${liste.id}-${i}`]).length;
+  return <>
+    <div style={{...card,display:"flex",padding:0,overflow:"hidden"}}>
+      {[{l:"Kalori",v:liste.macros.cal,c:"#E74C3C"},{l:"Protein",v:liste.macros.protein,c:"#3498DB"},{l:"Yağ",v:liste.macros.fat,c:"#E67E22"},{l:"Karb",v:liste.macros.carb,c:"#2ECC71"}].map((m,i)=><div key={i} style={{flex:1,padding:"14px 0",textAlign:"center",borderRight:i<3?"1px solid rgba(255,255,255,0.05)":"none"}}>
+        <div style={{...mono,fontSize:18,fontWeight:600,color:m.c}}>{m.v}</div>
+        <div style={{fontSize:10,color:"#5a6080",marginTop:2}}>{m.l}</div>
+      </div>)}
+    </div>
+    <div style={{display:"flex",alignItems:"center",gap:8,margin:"12px 0 16px"}}>
+      <div style={{flex:1,height:3,background:"#1a1f35",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${(done/main.length)*100}%`,background:"linear-gradient(90deg,#E74C3C,#E67E22)",borderRadius:2,transition:"width .4s"}}/></div>
+      <span style={{...mono,fontSize:11,color:"#5a6080"}}>{done}/{main.length}</span>
+    </div>
+    {liste.meals.map((meal,i)=>{const k=`${liste.id}-${i}`,d=mc[k],isA=meal.label.startsWith("Alternatif"),isE=exp===k;
+    return <div key={k} style={{...card,opacity:d?.5:1}}>
+      <div style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>setExp(isE?null:k)}>
+        {!isA&&<div onClick={e=>{e.stopPropagation();tog(k)}} style={{width:20,height:20,borderRadius:6,border:`2px solid ${d?"#10B981":"#3a4060"}`,background:d?"#10B981":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>{d&&<span style={{color:"#0a0e1a",fontSize:11,fontWeight:700}}>✓</span>}</div>}
+        <span style={{fontSize:26}}>{meal.icon}</span>
+        <div style={{flex:1}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:15,fontWeight:600,color:d?"#5a6080":"#e0e4ef",textDecoration:d?"line-through":"none"}}>{meal.name}</span>
+            {isA&&<span style={badge("#E67E22")}>ALTERNATİF</span>}
+          </div>
+          <div style={{...mono,fontSize:11,color:"#5a6080",marginTop:2}}>{meal.label} · {meal.time}</div>
+        </div>
+        <span style={{color:"#3a4060",fontSize:12}}>{isE?"▲":"▼"}</span>
+      </div>
+      {isE&&<div style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+        {meal.items.map((it,j)=><div key={j} style={{display:"flex",gap:8,padding:"4px 0"}}><span style={{color:"#3a4060"}}>›</span><span style={{color:"#8892b0",fontSize:13,lineHeight:1.5}}>{it}</span></div>)}
+      </div>}
+    </div>})}
+    <div style={{...mono,fontSize:10,letterSpacing:2,color:"#5a6080",margin:"20px 0 10px",fontWeight:600}}>SUPPLEMENTLER</div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+      {SUPPS.map((sp,i)=><div key={i} style={{...card,padding:12,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>{sp.i}</span><div><div style={{fontSize:13,fontWeight:600}}>{sp.n}</div><div style={{fontSize:11,color:"#5a6080"}}>{sp.d}</div></div></div>)}
+    </div>
+  </>;
+}
+
+/* ANTRENMAN */
+function Workout({wd,setWd,ec,setEc}){
+  const w=WK[wd];const tog=k=>setEc(p=>({...p,[k]:!p[k]}));
+  const done=w.ex.filter((_,i)=>ec[`${wd}-${i}`]).length;
+  return <>
+    <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto"}}>
+      {WK.map((wo,i)=><button key={i} onClick={()=>setWd(i)} style={{flex:"0 0 auto",padding:"10px 14px",borderRadius:12,cursor:"pointer",border:wd===i?`1px solid ${wo.ac}40`:"1px solid rgba(255,255,255,0.05)",background:wd===i?wo.ac+"12":"rgba(255,255,255,0.02)",color:wd===i?wo.ac:"#5a6080",fontSize:12,fontFamily:"'Outfit',sans-serif",fontWeight:wd===i?600:400}}><span style={{marginRight:4}}>{wo.icon}</span>Gün {wo.day}</button>)}
+    </div>
+    <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+      <div><div style={{fontSize:18,fontWeight:600}}>{w.name}</div><div style={{...mono,fontSize:11,color:"#5a6080"}}>{w.ex.length} hareket</div></div>
+      <div style={{...mono,fontSize:14,color:w.ac}}>{done}/{w.ex.length}</div>
+    </div>
+    {w.ex.map((ex,i)=>{const k=`${wd}-${i}`,d=ec[k];
+    return <div key={k} style={{...card,display:"flex",alignItems:"flex-start",gap:12,opacity:d?.45:1}}>
+      <div onClick={()=>tog(k)} style={{width:20,height:20,borderRadius:6,border:`2px solid ${d?w.ac:"#3a4060"}`,background:d?w.ac:"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,marginTop:2}}>{d&&<span style={{color:"#0a0e1a",fontSize:11,fontWeight:700}}>✓</span>}</div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:14,fontWeight:600,color:d?"#5a6080":"#e0e4ef",textDecoration:d?"line-through":"none"}}>{ex.n}{ex.note&&<span style={{...mono,fontSize:10,color:"#5a6080",marginLeft:6}}>({ex.note})</span>}</div>
+        <div style={{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}}>
+          <span style={badge(w.ac)}>{ex.s}</span>
+          {ex.r&&<span style={badge("#8892b0")}>{ex.r}</span>}
+          <span style={badge("#5a6080")}>⏱ {ex.rest}</span>
+        </div>
+      </div>
+    </div>})}
+    {w.xt.map((e,i)=><div key={i} style={{...card,borderStyle:"dashed"}}><div style={{color:"#8892b0",fontSize:13,fontStyle:"italic"}}>{e}</div></div>)}
+  </>;
+}
+
+/* POMODORO */
+function Pomo({ps,setPs}){
+  const [mode,setMode]=useState("work");
+  const [run,setRun]=useState(false);
+  const [tl,setTl]=useState(ps.work*60);
+  const [rnd,setRnd]=useState(1);
+  const [edit,setEdit]=useState(false);
+  const ref=useRef(null);
+  const tot=mode==="work"?ps.work*60:mode==="brk"?ps.brk*60:ps.lng*60;
+  const prog=(tot-tl)/tot;
+  useEffect(()=>{setTl(ps.work*60);setMode("work");setRnd(1);setRun(false)},[ps]);
+  useEffect(()=>{
+    if(run){ref.current=setInterval(()=>{setTl(p=>{if(p<=1){clearInterval(ref.current);ep();return 0}return p-1})},1000)}
+    else clearInterval(ref.current);
+    return()=>clearInterval(ref.current);
+  },[run,mode]);
+  const ep=()=>{setRun(false);if(mode==="work"){if(rnd%4===0){setMode("lng");setTl(ps.lng*60)}else{setMode("brk");setTl(ps.brk*60)}}else{setMode("work");setTl(ps.work*60);setRnd(r=>r+1)}};
+  const rs=()=>{setRun(false);setMode("work");setTl(ps.work*60);setRnd(1)};
+  const fmt=s=>`${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
+  const mc=mode==="work"?"#E74C3C":mode==="brk"?"#2ECC71":"#3498DB";
+  const ml=mode==="work"?"ODAK":mode==="brk"?"MOLA":"UZUN MOLA";
+  const me=mode==="work"?"🎯":mode==="brk"?"☕":"🌿";
+  const r=100,cx=110,cy=110,circ=2*Math.PI*r;
+  return <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 18px",borderRadius:20,background:mc+"15",border:`1px solid ${mc}30`,marginBottom:28}}>
+      <span style={{fontSize:16}}>{me}</span><span style={{...mono,fontSize:12,color:mc,fontWeight:600,letterSpacing:1}}>{ml}</span>
+    </div>
+    <div style={{position:"relative",width:220,height:220,marginBottom:28}}>
+      <svg width="220" height="220" viewBox="0 0 220 220" style={{transform:"rotate(-90deg)"}}><circle cx={cx} cy={cy} r={r} fill="none" stroke="#1a1f35" strokeWidth="5"/><circle cx={cx} cy={cy} r={r} fill="none" stroke={mc} strokeWidth="5" strokeDasharray={circ} strokeDashoffset={circ*(1-prog)} strokeLinecap="round" style={{transition:"stroke-dashoffset .5s"}}/></svg>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+        <div style={{...mono,fontSize:44,fontWeight:300,color:"#f0f2f8",letterSpacing:2}}>{fmt(tl)}</div>
+        <div style={{...mono,fontSize:11,color:"#5a6080",marginTop:4}}>Tur {rnd} / 4</div>
+      </div>
+    </div>
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:24}}>
+      <button onClick={rs} style={{width:44,height:44,borderRadius:22,background:"#1a1f35",border:"1px solid rgba(255,255,255,0.06)",color:"#5a6080",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>↺</button>
+      <button onClick={()=>setRun(!run)} style={{padding:"14px 32px",borderRadius:28,border:"none",cursor:"pointer",background:run?"#1a1f35":mc,color:run?"#e0e4ef":"#0a0e1a",fontSize:15,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>{run?"⏸  Duraklat":"▶  Başla"}</button>
+      <button onClick={()=>{setRun(false);ep()}} style={{width:44,height:44,borderRadius:22,background:"#1a1f35",border:"1px solid rgba(255,255,255,0.06)",color:"#5a6080",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>⏭</button>
+    </div>
+    <div style={{display:"flex",gap:8,marginBottom:24}}>{[1,2,3,4].map(r=><div key={r} style={{width:10,height:10,borderRadius:5,background:r<rnd?mc:r===rnd?mc+"70":"#1a1f35",transition:"background .3s"}}/>)}</div>
+    <button onClick={()=>setEdit(!edit)} style={{background:"none",border:"none",color:"#5a6080",cursor:"pointer",...mono,fontSize:11}}>⚙️ Süreleri Ayarla {edit?"▲":"▼"}</button>
+    {edit&&<div style={{...card,width:"100%",marginTop:8}}>
+      {[{l:"Odak",k:"work"},{l:"Kısa mola",k:"brk"},{l:"Uzun mola",k:"lng"}].map(it=><div key={it.k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0"}}>
+        <span style={{fontSize:13,color:"#8892b0"}}>{it.l}</span>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <button onClick={()=>setPs(p=>({...p,[it.k]:Math.max(1,p[it.k]-5)}))} style={{width:28,height:28,borderRadius:8,background:"#1a1f35",border:"1px solid rgba(255,255,255,0.06)",color:"#8892b0",cursor:"pointer",fontSize:14}}>−</button>
+          <span style={{...mono,fontSize:15,color:"#f0f2f8",minWidth:30,textAlign:"center"}}>{ps[it.k]}</span>
+          <button onClick={()=>setPs(p=>({...p,[it.k]:p[it.k]+5}))} style={{width:28,height:28,borderRadius:8,background:"#1a1f35",border:"1px solid rgba(255,255,255,0.06)",color:"#8892b0",cursor:"pointer",fontSize:14}}>+</button>
+          <span style={{...mono,fontSize:11,color:"#5a6080"}}>dk</span>
+        </div>
+      </div>)}
+    </div>}
+  </div>;
+}
+
+/* İZLEME */
+function Watch({wl,setWl}){
+  const [view,setView]=useState("izliyorum");
+  const [en,setEn]=useState(null);
+  const [nt,setNt]=useState("");
+  const [wi,setWi]=useState("");
+  const [li,setLi]=useState("");
+  const add=(tgt)=>{const v=tgt==="watching"?wi:li;if(!v.trim())return;const e={id:Date.now(),title:v.trim(),note:"",addedAt:new Date().toLocaleDateString("tr-TR")};setWl(p=>({...p,[tgt]:[...p[tgt],e]}));tgt==="watching"?setWi(""):setLi("")};
+  const rm=(tgt,id)=>setWl(p=>({...p,[tgt]:p[tgt].filter(i=>i.id!==id)}));
+  const mv=(from,to,id)=>{const it=wl[from].find(i=>i.id===id);if(it)setWl(p=>({[from]:p[from].filter(i=>i.id!==id),[to]:[...p[to],it]}))};
+  const sv=(tgt,id)=>{setWl(p=>({...p,[tgt]:p[tgt].map(i=>i.id===id?{...i,note:nt}:i)}));setEn(null);setNt("")};
+  const rn=(item,pfx,tgt)=>{const k=`${pfx}-${item.id}`;
+    if(en===k)return <div style={{marginTop:10}}><textarea value={nt} onChange={e=>setNt(e.target.value)} placeholder="Not yaz..." rows="3" style={{width:"100%",padding:"10px 12px",borderRadius:8,fontSize:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"#e0e4ef",outline:"none",fontFamily:"'Outfit',sans-serif",resize:"vertical",lineHeight:1.5,boxSizing:"border-box"}}/><div style={{display:"flex",gap:6,marginTop:6}}><button onClick={()=>sv(tgt,item.id)} style={{flex:1,padding:8,borderRadius:8,cursor:"pointer",fontSize:12,background:"rgba(46,204,113,0.12)",border:"1px solid rgba(46,204,113,0.25)",color:"#2ECC71"}}>Kaydet</button><button onClick={()=>setEn(null)} style={{padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",color:"#5a6080"}}>İptal</button></div></div>;
+    if(item.note)return <div onClick={()=>{setEn(k);setNt(item.note)}} style={{marginTop:10,padding:"8px 12px",borderRadius:8,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)",fontSize:13,color:"#8892b0",cursor:"pointer",lineHeight:1.5}}>📝 {item.note}</div>;
+    return <button onClick={()=>{setEn(k);setNt("")}} style={{marginTop:8,padding:"6px 12px",borderRadius:8,cursor:"pointer",fontSize:12,background:"none",border:"1px dashed rgba(255,255,255,0.1)",color:"#5a6080"}}>+ Not ekle</button>;
+  };
+  return <>
+    <div style={{display:"flex",gap:6,marginBottom:16}}>
+      {[{id:"izliyorum",l:`👁 İzliyorum (${wl.watching.length})`,c:"#2ECC71"},{id:"sonra",l:`📌 Sonra İzle (${wl.later.length})`,c:"#3498DB"}].map(t=><button key={t.id} onClick={()=>setView(t.id)} style={{flex:1,padding:"10px 6px",borderRadius:10,cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:view===t.id?600:400,border:view===t.id?`1px solid ${t.c}35`:"1px solid rgba(255,255,255,0.05)",background:view===t.id?t.c+"10":"rgba(255,255,255,0.02)",color:view===t.id?t.c:"#5a6080"}}>{t.l}</button>)}
+    </div>
+    {view==="izliyorum"?<>
+      <div style={{display:"flex",gap:6,marginBottom:14}}><input value={wi} onChange={e=>setWi(e.target.value)} placeholder="Film veya dizi adı yaz..." onKeyDown={e=>e.key==="Enter"&&add("watching")} style={{flex:1,padding:"10px 14px",borderRadius:10,fontSize:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#e0e4ef",outline:"none"}}/><button onClick={()=>add("watching")} style={{padding:"10px 16px",borderRadius:10,cursor:"pointer",background:"rgba(46,204,113,0.15)",border:"1px solid rgba(46,204,113,0.3)",color:"#2ECC71",fontSize:18,fontWeight:600}}>+</button></div>
+      {wl.watching.length===0?<div style={{textAlign:"center",padding:30,color:"#3a4060"}}><div style={{fontSize:36,marginBottom:8}}>📺</div><div style={{fontSize:13}}>Henüz izlediğin bir şey yok</div></div>:
+      wl.watching.map(it=><div key={it.id} style={card}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{flex:1}}><div style={{fontSize:15,fontWeight:600,color:"#f0f2f8"}}>{it.title}</div><div style={{...mono,fontSize:11,color:"#3a4060",marginTop:2}}>{it.addedAt}</div></div><div style={{display:"flex",gap:4}}><button onClick={()=>mv("watching","later",it.id)} style={{background:"none",border:"none",color:"#3498DB",cursor:"pointer",fontSize:12,padding:4,opacity:.6}}>📌</button><button onClick={()=>rm("watching",it.id)} style={{background:"none",border:"none",color:"#E74C3C",cursor:"pointer",fontSize:14,padding:4,opacity:.4}}>✕</button></div></div>{rn(it,"w","watching")}</div>)}
+    </>:<>
+      <div style={{display:"flex",gap:6,marginBottom:14}}><input value={li} onChange={e=>setLi(e.target.value)} placeholder="Film veya dizi adı yaz..." onKeyDown={e=>e.key==="Enter"&&add("later")} style={{flex:1,padding:"10px 14px",borderRadius:10,fontSize:13,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",color:"#e0e4ef",outline:"none"}}/><button onClick={()=>add("later")} style={{padding:"10px 16px",borderRadius:10,cursor:"pointer",background:"rgba(52,152,219,0.15)",border:"1px solid rgba(52,152,219,0.3)",color:"#3498DB",fontSize:18,fontWeight:600}}>+</button></div>
+      {wl.later.length===0?<div style={{textAlign:"center",padding:30,color:"#3a4060"}}><div style={{fontSize:36,marginBottom:8}}>📌</div><div style={{fontSize:13}}>Sonra izle listen boş</div></div>:
+      wl.later.map(it=><div key={it.id} style={card}><div style={{display:"flex",justifyContent:"space-between"}}><div style={{flex:1}}><div style={{fontSize:15,fontWeight:600,color:"#f0f2f8"}}>{it.title}</div><div style={{...mono,fontSize:11,color:"#3a4060",marginTop:2}}>{it.addedAt}</div></div><button onClick={()=>rm("later",it.id)} style={{background:"none",border:"none",color:"#E74C3C",cursor:"pointer",fontSize:14,padding:4,opacity:.4}}>✕</button></div>{rn(it,"l","later")}<button onClick={()=>mv("later","watching",it.id)} style={{marginTop:8,padding:7,borderRadius:8,cursor:"pointer",fontSize:12,background:"rgba(46,204,113,0.08)",border:"1px solid rgba(46,204,113,0.2)",color:"#2ECC71",fontWeight:500,width:"100%"}}>▶ İzlemeye Başla</button></div>)}
+    </>}
+  </>;
+}
+
+/* REHBER */
+function Guide({tc,setTc,ev,setEv}){
+  const [sh,setSh]=useState(true);
+  const td=TIPS.filter(t=>tc[t.id]).length;
+  return <>
+    <div style={{display:"flex",gap:6,marginBottom:16}}>
+      {[{id:true,l:"Günlük Akış"},{id:false,l:"Kurallar & İpuçları"}].map(t=><button key={String(t.id)} onClick={()=>setSh(t.id)} style={{flex:1,padding:10,borderRadius:10,cursor:"pointer",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:sh===t.id?600:400,border:sh===t.id?"1px solid rgba(231,76,60,0.3)":"1px solid rgba(255,255,255,0.05)",background:sh===t.id?"rgba(231,76,60,0.08)":"rgba(255,255,255,0.02)",color:sh===t.id?"#E74C3C":"#5a6080"}}>{t.l}</button>)}
+    </div>
+    {sh?SCH.map((s,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:2}}>
+      <div style={{width:44,textAlign:"right",paddingTop:14,flexShrink:0}}><div style={{...mono,fontSize:11,color:"#5a6080"}}>{s.t}</div></div>
+      <div style={{width:20,display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0}}><div style={{width:10,height:10,borderRadius:5,background:s.c,marginTop:16,flexShrink:0}}/>{i<SCH.length-1&&<div style={{width:1,flex:1,background:"rgba(255,255,255,0.06)",minHeight:20}}/>}</div>
+      <div style={{...card,flex:1,padding:12,...(s.opt?{borderStyle:"dashed",borderColor:s.c+"30"}:{})}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{s.i}</span><div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14,fontWeight:600}}>{s.l}</span>{s.opt&&<span style={badge(s.c)}>OPSİYONEL</span>}</div><div style={{fontSize:12,color:"#5a6080",marginTop:1}}>{s.d}</div></div></div>
+        {s.opt&&<div style={{display:"flex",gap:6,marginTop:10}}>
+          {[{v:"bisiklet",l:"🚴 Bisiklet",c:"#E67E22"},{v:"yuruyus",l:"🚶 Yürüyüş",c:"#2ECC71"},{v:"pas",l:"😴 Pas",c:"#5a6080"}].map(o=><button key={o.v} onClick={()=>setEv(o.v)} style={{flex:1,padding:8,borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",border:ev===o.v?`1px solid ${o.c}50`:"1px solid rgba(255,255,255,0.06)",background:ev===o.v?o.c+"15":"rgba(255,255,255,0.02)",color:ev===o.v?o.c:"#5a6080",fontWeight:ev===o.v?600:400}}>{o.l}</button>)}
+        </div>}
+      </div>
+    </div>):<>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+        <div style={{flex:1,height:3,background:"#1a1f35",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${(td/TIPS.length)*100}%`,background:"linear-gradient(90deg,#F59E0B,#6366F1)",borderRadius:2,transition:"width .4s"}}/></div>
+        <span style={{...mono,fontSize:11,color:"#5a6080"}}>{td}/{TIPS.length}</span>
+      </div>
+      {TIPS.map(tip=>{const d=tc[tip.id];return <div key={tip.id} onClick={()=>setTc(p=>({...p,[tip.id]:!p[tip.id]}))} style={{...card,display:"flex",alignItems:"center",gap:12,opacity:d?.5:1,cursor:"pointer"}}>
+        <div style={{width:20,height:20,borderRadius:6,border:`2px solid ${d?tip.c:"#3a4060"}`,background:d?tip.c:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{d&&<span style={{color:"#0a0e1a",fontSize:11,fontWeight:700}}>✓</span>}</div>
+        <span style={{fontSize:14,fontWeight:500,color:d?"#5a6080":"#e0e4ef",textDecoration:d?"line-through":"none"}}>{tip.t}</span>
+      </div>})}
+      <div style={{...mono,fontSize:10,letterSpacing:2,color:"#5a6080",margin:"20px 0 10px",fontWeight:600}}>GÜNLÜK SUPPLEMENTLER</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {SUPPS.map((sp,i)=><div key={i} style={{...card,padding:12,display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{sp.i}</span><div><div style={{fontSize:12,fontWeight:600}}>{sp.n}</div><div style={{fontSize:10,color:"#5a6080"}}>{sp.d}</div></div></div>)}
+      </div>
+    </>}
+  </>;
+}
+
+ReactDOM.render(<App/>,document.getElementById("root"));
+</script>
+</body>
+</html>
